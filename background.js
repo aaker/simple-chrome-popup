@@ -1,6 +1,5 @@
 function postData(url = ``, data = {}) {
-  // Default options are marked with *
-    return fetch(url, {
+  return fetch(url, {
         method: "POST", // *GET, POST, PUT, DELETE, etc.
         mode: "cors", // no-cors, cors, *same-origin
         credentials: "same-origin", // include, *same-origin, omit
@@ -28,16 +27,23 @@ function lookupNumber (number, settings)
 let myNotificationID = 0;
 function postNotification(number,data)
 {
+  console.log(data);
   if (Notification.permission !== "granted")
-                    Notification.requestPermission();
+    Notification.requestPermission();
   else {
       let name = "";
       let extra = "";
       if (data.belongs_to[0].firstname)
       {
         name = data.belongs_to[0].firstname + " " + data.belongs_to[0].lastname;
-        extra = data.belongs_to[0].gender + " " + data.belongs_to[0].age_range + " " + data.carrier;
-
+        if (data.belongs_to[0].gender)
+        {
+          extra = data.belongs_to[0].gender + " " + data.belongs_to[0].age_range + " " + data.carrier;
+        }
+        else if (data.current_addresses[0].city)
+        {
+          extra = data.current_addresses[0].city + ", " + data.current_addresses[0].state_code;
+        }
       }
       else if(data.belongs_to.name)
       {
@@ -97,13 +103,27 @@ function subscribe(settings,token)
     'bearer': token
   };
 
+  var request_cdr_data = {
+    domain: settings.username.split("@")[1],
+    type: 'cdr',
+    'bearer': token
+  };
+
 
   let socket = io.connect('https://' + settings.hostname + ':8001', {secure: true});
   socket.on('connect', function() {
     setTimeout(
       function(request_call_data){
+        console.log(request_call_data);
         socket.emit('subscribe', request_call_data);
       }, 1000,request_call_data
+    );
+
+    setTimeout(
+      function(request_cdr_data){
+        console.log(request_cdr_data);
+        socket.emit('subscribe', request_cdr_data);
+      }, 1000,request_cdr_data
     );
   });
 
@@ -127,6 +147,10 @@ function subscribe(settings,token)
 
     lookupNumber(data.orig_from_user, settings);
 
+  });
+
+  socket.on('cdr', function(data) {
+    console.log(data);
   });
 
   socket.on('status', function(data) {

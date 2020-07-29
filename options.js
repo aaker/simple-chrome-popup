@@ -9,7 +9,6 @@ function save_options() {
     password: document.getElementById('password').value,
     whitepages_key: document.getElementById('whitepages_key').value
   };
-  debugger;
   chrome.storage.sync.set(toSave, function() {
     // Update status to let user know options were saved.
     var status = document.getElementById('status');
